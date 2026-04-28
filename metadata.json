@@ -1,0 +1,6 @@
+{
+  "name": "Multi-Tenant Enterprise Portal",
+  "description": "A scalable MERN stack multi-tenant application with role-based access control (RBAC) for super admins, employees, and clients.",
+  "requestFramePermissions": [],
+  "majorCapabilities": []
+}

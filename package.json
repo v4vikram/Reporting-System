@@ -1,0 +1,26 @@
+{
+  "name": "enterprise-reporting-system",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "workspaces": [
+    "client",
+    "server"
+  ],
+  "scripts": {
+    "dev": "concurrently -n \"server,client\" -c \"magenta,cyan\" \"npm run dev -w server\" \"npm run dev -w client\"",
+    "build": "npm run build -w server && npm run build -w client",
+    "start": "node server/dist/index.js",
+    "seed": "npm run seed -w server",
+    "lint": "npm run lint -w client && npm run lint -w server"
+  },
+  "devDependencies": {
+    "concurrently": "^9.2.1",
+    "tsx": "^4.21.0",
+    "typescript": "~5.8.2"
+  },
+  "dependencies": {
+    "@google/genai": "^1.50.1",
+    "llamaindex": "^0.12.1"
+  }
+}
