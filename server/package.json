@@ -7,7 +7,8 @@
     "start": "node dist/index.js",
     "dev": "tsx index.ts",
     "seed": "tsx seed.ts",
-    "lint": "tsc --noEmit"
+    "lint": "tsc --noEmit",
+    "postinstall": "npx puppeteer browsers install chrome"
   },
   "dependencies": {
     "@google/genai": "^1.29.0",
