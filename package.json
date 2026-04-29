@@ -9,8 +9,8 @@
   ],
   "scripts": {
     "dev": "concurrently -n \"server,client\" -c \"magenta,cyan\" \"npm run dev -w server\" \"npm run dev -w client\"",
-    "build": "npm run build -w server && npm run build -w client",
-    "start": "node server/dist/index.js",
+    "build": "npx puppeteer browsers install chrome && npm run build -w server && npm run build -w client",
+    "start": "node server/dist/app.js",
     "seed": "npm run seed -w server",
     "lint": "npm run lint -w client && npm run lint -w server"
   },

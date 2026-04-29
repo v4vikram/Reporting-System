@@ -4,7 +4,7 @@
   "version": "0.0.0",
   "scripts": {
     "build": "tsc",
-    "start": "node dist/src/app.js",
+    "start": "node dist/app.js",
     "dev": "tsx src/app.ts",
     "seed": "tsx seed.ts",
     "lint": "tsc --noEmit",

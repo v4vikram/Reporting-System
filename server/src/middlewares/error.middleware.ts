@@ -23,7 +23,8 @@ const sendErrorProd = (err: any, res: Response) => {
     logger.error('ERROR 💥', err);
     res.status(500).json({
       success: false,
-      message: 'Something went very wrong!',
+      message: err.message || 'Something went very wrong!',
+      debugInfo: process.env.NODE_ENV === 'production' ? undefined : err
     });
   }
 };

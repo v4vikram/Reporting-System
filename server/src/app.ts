@@ -1,3 +1,4 @@
+import mongoose from 'mongoose';
 import { config } from './config/env';
 import { connectDB } from './config/db';
 import express, { Request, Response } from 'express';
@@ -17,6 +18,9 @@ import logger from './utils/logger';
 
 const app = express();
 
+// Proxy configuration - trust X-Forwarded-For headers
+app.set('trust proxy', 1);
+
 // Middleware
 app.use(helmet());
 app.use(rateLimiter);
@@ -32,24 +36,30 @@ app.use(cors({
 app.use(morgan('dev'));
 app.use(['/api/uploads', '/uploads'], express.static(path.join(__dirname, '../uploads')));
 
+// API Routes
+app.use('/api/auth', authRoutes);
+app.use('/api/projects', projectRoutes);
+app.use('/api/reports', reportRoutes);
+app.use('/api/upload', uploadRoutes);
+app.use('/api/public', publicRoutes);
+
+app.get('/api/health', (req: Request, res: Response) => {
+  const dbStatus = mongoose.connection.readyState === 1 ? 'connected' : 'disconnected';
+  res.json({ 
+    status: 'ok', 
+    message: 'Backend API is running',
+    database: dbStatus,
+    timestamp: new Date().toISOString()
+  });
+});
+
+// Global Error Handler
+app.use(globalErrorHandler);
+
 // Initialize DB and Start Server
 const startServer = async () => {
     await connectDB();
 
-    // API Routes
-    app.use('/api/auth', authRoutes);
-    app.use('/api/projects', projectRoutes);
-    app.use('/api/reports', reportRoutes);
-    app.use('/api/upload', uploadRoutes);
-    app.use('/api/public', publicRoutes);
-    
-    app.get('/api/health', (req: Request, res: Response) => {
-      res.json({ status: 'ok', message: 'Backend API is running' });
-    });
-    
-    // Global Error Handler
-    app.use(globalErrorHandler);
-    
     app.listen(config.port, '0.0.0.0', () => {
       logger.info(`🚀 Backend API running on http://0.0.0.0:${config.port}`);
     });
