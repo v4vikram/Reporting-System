@@ -10,6 +10,7 @@ import sharp from 'sharp';
 import path from 'path';
 import fs from 'fs';
 import puppeteer from 'puppeteer';
+import { config } from '../../config/env';
 
 const getAbsoluteUrl = (url: string, isInternal = false) => {
   if (!url) return '';
@@ -17,8 +18,8 @@ const getAbsoluteUrl = (url: string, isInternal = false) => {
   
   // For Puppeteer internal requests, we prefer localhost to avoid networking loop issues with external URLs
   const baseUrl = isInternal 
-  ? `http://127.0.0.1:${process.env.PORT || 3000}`
-  : (process.env.APP_URL || `http://localhost:${process.env.PORT || 3000}`);
+  ? `http://127.0.0.1:${config.port}`
+  : (process.env.APP_URL || config.clientUrl || `http://localhost:${config.port}`);
   
   // Ensure we don't have double slashes
   const cleanBaseUrl = baseUrl.endsWith('/') ? baseUrl.slice(0, -1) : baseUrl;
@@ -608,7 +609,7 @@ export const generatePDF = asyncHandler(async (req: Request, res: Response) => {
   `;
 
   const browser = await puppeteer.launch({
-    args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-web-security']
+    args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-web-security', '--disable-dev-shm-usage']
   });
   const page = await browser.newPage();
   await page.setContent(html, { waitUntil: 'networkidle0' });
