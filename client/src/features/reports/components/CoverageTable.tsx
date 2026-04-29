@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+import toast from 'react-hot-toast';
 import { Plus, Trash2, Copy, GripVertical, Image as ImageIcon, Upload, X as CloseIcon, Star, Sparkles, Loader2, WrapText } from 'lucide-react';
 import { reportService } from '../api/reportService.ts';
 import { geminiService } from '../api/geminiService.ts';
@@ -45,7 +46,6 @@ export default function CoverageTableComponent({ table, sectionId, dragHandlePro
   
   // Modal states
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
-  const [errorMsg, setErrorMsg] = useState('');
   const [wrappedColumns, setWrappedColumns] = useState<Record<string, boolean>>({});
 
   const toggleWrap = (column: string) => {
@@ -75,10 +75,11 @@ export default function CoverageTableComponent({ table, sectionId, dragHandlePro
       }
       
       updateTableData(sectionId, updatedTable);
+      toast.success('Table extracted successfully');
       
     } catch (error: any) {
       console.error('Failed to extract table from image', error);
-      setErrorMsg(error.response?.data?.message || 'Failed to extract table from image. Ensure the image is clear.');
+      toast.error(error.response?.data?.message || 'Failed to extract table from image. Ensure the image is clear.');
     } finally {
       setIsExtracting(false);
       e.target.value = ''; // Reset input
@@ -90,9 +91,10 @@ export default function CoverageTableComponent({ table, sectionId, dragHandlePro
       await reportService.deleteTable(table._id);
       deleteTable(sectionId, table._id);
       setIsDeleteModalOpen(false);
+      toast.success('Table deleted');
     } catch (error) {
       console.error('Failed to delete table', error);
-      setErrorMsg('Failed to delete table');
+      toast.error('Failed to delete table');
       setIsDeleteModalOpen(false);
     }
   };
@@ -113,9 +115,10 @@ export default function CoverageTableComponent({ table, sectionId, dragHandlePro
       }
       
       addTable(sectionId, updatedTable);
+      toast.success('Table duplicated');
     } catch (error) {
       console.error('Failed to duplicate table', error);
-      setErrorMsg('Failed to duplicate table');
+      toast.error('Failed to duplicate table');
     }
   };
 
@@ -134,8 +137,10 @@ export default function CoverageTableComponent({ table, sectionId, dragHandlePro
       };
       const updatedTable = await reportService.addRow(table._id, newRow);
       updateTableData(sectionId, updatedTable);
+      toast.success('Row added');
     } catch (error) {
       console.error('Failed to add row', error);
+      toast.error('Failed to add row');
     }
   };
 
@@ -150,9 +155,10 @@ export default function CoverageTableComponent({ table, sectionId, dragHandlePro
         srNo: maxSrNo + 1
       });
       updateTableData(sectionId, updatedTable);
+      toast.success('Row duplicated');
     } catch (error) {
       console.error('Failed to duplicate row', error);
-      setErrorMsg('Failed to duplicate row');
+      toast.error('Failed to duplicate row');
     }
   };
 
@@ -172,9 +178,10 @@ export default function CoverageTableComponent({ table, sectionId, dragHandlePro
       for (const row of updatedRows) {
         await reportService.updateRow(table._id, row._id!, { srNo: row.srNo });
       }
+      toast.success('Rows renumbered');
     } catch (error) {
       console.error('Failed to renumber rows', error);
-      setErrorMsg('Failed to renumber serial numbers. Some rows might not have updated.');
+      toast.error('Failed to renumber serial numbers. Some rows might not have updated.');
     }
   };
 
@@ -182,8 +189,10 @@ export default function CoverageTableComponent({ table, sectionId, dragHandlePro
     try {
       const updatedTable = await reportService.deleteRow(table._id, rowId);
       updateTableData(sectionId, updatedTable);
+      toast.success('Row deleted');
     } catch (error) {
       console.error('Failed to delete row', error);
+      toast.error('Failed to delete row');
     }
   };
 
@@ -198,6 +207,7 @@ export default function CoverageTableComponent({ table, sectionId, dragHandlePro
       await reportService.updateRow(table._id, rowId, { [field]: value });
     } catch (error) {
       console.error('Failed to update row', error);
+      toast.error('Failed to update row');
       // Revert on failure could be implemented here
     }
   };
@@ -253,9 +263,10 @@ export default function CoverageTableComponent({ table, sectionId, dragHandlePro
     try {
       const updatedTable = await reportService.uploadRowImage(table._id, activeRowId, file);
       updateTableData(sectionId, updatedTable);
+      toast.success('Image uploaded');
     } catch (error) {
       console.error('Failed to upload row image', error);
-      setErrorMsg('Failed to upload image. Please try again.');
+      toast.error('Failed to upload image. Please try again.');
     } finally {
       setActiveRowId(null);
       e.target.value = '';
@@ -656,25 +667,6 @@ export default function CoverageTableComponent({ table, sectionId, dragHandlePro
               className="px-4 py-2 text-sm bg-red-500 text-white rounded-md hover:bg-red-600 transition-colors"
             >
               Delete
-            </button>
-          </div>
-        </div>
-      </Modal>
-
-      {/* Error Modal */}
-      <Modal 
-        isOpen={!!errorMsg} 
-        onClose={() => setErrorMsg('')}
-        title="Notice"
-      >
-        <div className="space-y-4">
-          <p className="text-text-primary">{errorMsg}</p>
-          <div className="flex justify-end mt-6">
-            <button 
-              onClick={() => setErrorMsg('')}
-              className="px-4 py-2 text-sm bg-accent text-white rounded-md hover:bg-blue-600 transition-colors"
-            >
-              OK
             </button>
           </div>
         </div>

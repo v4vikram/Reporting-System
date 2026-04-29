@@ -1,4 +1,5 @@
 import React, { useCallback, useState } from 'react';
+import toast from 'react-hot-toast';
 import { useDropzone } from 'react-dropzone';
 import { DragDropContext, Droppable, Draggable, DropResult } from '@hello-pangea/dnd';
 import { Upload, X, GripVertical } from 'lucide-react';
@@ -16,7 +17,6 @@ interface Props {
 export default function ScreenshotUploader({ table, sectionId }: Props) {
   const { updateTableData } = useReportStore();
   const [isUploading, setIsUploading] = useState(false);
-  const [errorMsg, setErrorMsg] = useState('');
 
   const onDrop = useCallback(async (acceptedFiles: File[]) => {
     if (acceptedFiles.length === 0) return;
@@ -24,9 +24,10 @@ export default function ScreenshotUploader({ table, sectionId }: Props) {
     try {
       const updatedTable = await reportService.uploadScreenshots(table._id, acceptedFiles);
       updateTableData(sectionId, updatedTable);
+      toast.success('Screenshots uploaded successfully');
     } catch (error) {
       console.error('Failed to upload screenshots', error);
-      setErrorMsg('Failed to upload screenshots');
+      toast.error('Failed to upload screenshots');
     } finally {
       setIsUploading(false);
     }
@@ -45,8 +46,10 @@ export default function ScreenshotUploader({ table, sectionId }: Props) {
     try {
       // We need an endpoint to delete a screenshot, or we can update the table
       await reportService.updateTable(table._id, { screenshots: updatedScreenshots });
+      toast.success('Screenshot deleted');
     } catch (error) {
       console.error('Failed to delete screenshot', error);
+      toast.error('Failed to delete screenshot');
       // Revert on failure
       updateTableData(sectionId, table);
     }
@@ -136,25 +139,6 @@ export default function ScreenshotUploader({ table, sectionId }: Props) {
           </Droppable>
         </DragDropContext>
       )}
-
-      {/* Error Modal */}
-      <Modal 
-        isOpen={!!errorMsg} 
-        onClose={() => setErrorMsg('')}
-        title="Notice"
-      >
-        <div className="space-y-4">
-          <p className="text-text-primary">{errorMsg}</p>
-          <div className="flex justify-end mt-6">
-            <button 
-              onClick={() => setErrorMsg('')}
-              className="px-4 py-2 text-sm bg-accent text-white rounded-md hover:bg-blue-600 transition-colors"
-            >
-              OK
-            </button>
-          </div>
-        </div>
-      </Modal>
     </div>
   );
 }

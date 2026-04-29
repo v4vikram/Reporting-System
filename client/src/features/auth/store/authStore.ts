@@ -9,8 +9,20 @@ interface AuthState {
 }
 
 export const useAuthStore = create<AuthState>((set) => ({
-  user: JSON.parse(localStorage.getItem('user') || 'null'),
-  token: localStorage.getItem('token'),
+  user: (() => {
+    const user = localStorage.getItem('user');
+    if (!user || user === 'undefined' || user === 'null') return null;
+    try {
+      return JSON.parse(user);
+    } catch {
+      return null;
+    }
+  })(),
+  token: (() => {
+    const token = localStorage.getItem('token');
+    if (!token || token === 'undefined' || token === 'null') return null;
+    return token;
+  })(),
   login: (user, token) => {
     localStorage.setItem('user', JSON.stringify(user));
     localStorage.setItem('token', token);

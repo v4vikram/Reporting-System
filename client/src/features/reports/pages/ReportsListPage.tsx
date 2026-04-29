@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from 'react';
+import toast from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
 import { Plus, FileText, Download, Trash2, Edit, Copy, Search, Filter } from 'lucide-react';
 import { useAuthStore } from '../../auth/store/authStore.ts';
@@ -14,7 +15,6 @@ export default function ReportsList() {
 
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [reportToDelete, setReportToDelete] = useState<string | null>(null);
-  const [errorMsg, setErrorMsg] = useState('');
   
   // Filter States
   const [filterTitle, setFilterTitle] = useState('');
@@ -66,10 +66,16 @@ export default function ReportsList() {
 
   const handleDownload = async (id: string, title: string) => {
     try {
-      await reportService.downloadPdf(id, title);
+      await toast.promise(
+        reportService.downloadPdf(id, title),
+        {
+          loading: 'Generating PDF...',
+          success: 'PDF downloaded successfully',
+          error: 'Failed to download PDF'
+        }
+      );
     } catch (error) {
       console.error('Failed to download PDF', error);
-      setErrorMsg('Failed to download PDF');
     }
   };
 
@@ -80,9 +86,12 @@ export default function ReportsList() {
 
   const handleDuplicate = (id: string) => {
     duplicateMutation.mutate(id, {
+      onSuccess: () => {
+        toast.success('Report duplicated');
+      },
       onError: (error) => {
         console.error('Failed to duplicate report', error);
-        setErrorMsg('Failed to duplicate report');
+        toast.error('Failed to duplicate report');
       }
     });
   };
@@ -278,10 +287,11 @@ export default function ReportsList() {
                     onSuccess: () => {
                       setIsDeleteModalOpen(false);
                       setReportToDelete(null);
+                      toast.success('Report deleted');
                     },
                     onError: (error) => {
                       console.error('Failed to delete report', error);
-                      setErrorMsg('Failed to delete report');
+                      toast.error('Failed to delete report');
                       setIsDeleteModalOpen(false);
                     }
                   });
@@ -290,25 +300,6 @@ export default function ReportsList() {
               className="px-4 py-2 text-sm bg-red-500 text-white rounded-md hover:bg-red-600 transition-colors"
             >
               Delete
-            </button>
-          </div>
-        </div>
-      </Modal>
-
-      {/* Error Modal */}
-      <Modal 
-        isOpen={!!errorMsg} 
-        onClose={() => setErrorMsg('')}
-        title="Notice"
-      >
-        <div className="space-y-4">
-          <p className="text-text-primary">{errorMsg}</p>
-          <div className="flex justify-end mt-6">
-            <button 
-              onClick={() => setErrorMsg('')}
-              className="px-4 py-2 text-sm bg-accent text-white rounded-md hover:bg-blue-600 transition-colors"
-            >
-              OK
             </button>
           </div>
         </div>

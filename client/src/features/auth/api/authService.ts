@@ -3,7 +3,7 @@ import { User } from '../../../types/index.ts';
 
 export const authService = {
   login: async (credentials: Pick<User, 'email'> & { password?: string }) => {
-    const { data } = await api.post<{ user: User; token: string }>('/auth/login', credentials);
+    const { data } = await api.post<any>('/auth/login', credentials);
     return data;
   },
   forgotPassword: async (email: string) => {

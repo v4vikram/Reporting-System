@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import toast from 'react-hot-toast';
 import { useNavigate, Link } from 'react-router-dom';
 import { Eye, EyeOff } from 'lucide-react';
 import { useAuthStore } from '../store/authStore.ts';
@@ -8,18 +9,24 @@ export default function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  const [error, setError] = useState('');
-  const login = useAuthStore((state) => state.login);
+  const { login, token, user } = useAuthStore();
   const navigate = useNavigate();
+
+  React.useEffect(() => {
+    if (token && user) {
+      navigate('/', { replace: true });
+    }
+  }, [token, user, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
       const data = await authService.login({ email, password });
       login(data.user, data.token);
+      toast.success('Logged in successfully');
       navigate('/');
     } catch (err: any) {
-      setError(err.response?.data?.message || 'Login failed');
+      toast.error(err.response?.data?.message || 'Login failed');
     }
   };
 
@@ -27,7 +34,6 @@ export default function Login() {
     <div className="min-h-screen flex items-center justify-center bg-bg">
       <div className="bg-card p-8 rounded-xl border border-border w-full max-w-md">
         <h1 className="text-2xl font-bold text-text-primary mb-6 text-center">Login</h1>
-        {error && <p className="text-red-500 mb-4 text-center">{error}</p>}
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label className="block text-sm font-medium text-text-secondary mb-1">Email</label>

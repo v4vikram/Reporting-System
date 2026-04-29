@@ -11,9 +11,9 @@ export const reportService = {
     const { data } = await api.get<CoverageItem[]>(`/reports/latest-coverage?topOnly=${topOnly}`);
     return data;
   },
-  getReports: async () => {
-    const { data } = await api.get<Report[]>('/reports');
-    return data;
+  getReports: async (): Promise<Report[]> => {
+    const { data } = await api.get<any>('/reports');
+    return data && data.reports ? data.reports : (data as Report[]);
   },
   getReportById: async (id: string) => {
     const { data } = await api.get<Report>(`/reports/${id}`);

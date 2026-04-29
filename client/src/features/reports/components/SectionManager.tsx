@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import toast from 'react-hot-toast';
 import { ChevronDown, ChevronRight, Plus, Trash2, Edit2, Copy, Layout, GripVertical, ChevronUp } from 'lucide-react';
 import { DragDropContext, Droppable, Draggable, DropResult } from '@hello-pangea/dnd';
 import { reportService } from '../api/reportService.ts';
@@ -51,16 +52,16 @@ export default function SectionManager({ section, reportId, dragHandleProps }: P
   const [editSectionTitle, setEditSectionTitle] = useState(section.title || '');
   const [isTableModalOpen, setIsTableModalOpen] = useState(false);
   const [newTableTitle, setNewTableTitle] = useState('');
-  const [errorMsg, setErrorMsg] = useState('');
 
   const handleDelete = async () => {
     try {
       await reportService.deleteSection(section._id);
       deleteSection(section._id);
       setIsDeleteModalOpen(false);
+      toast.success('Section deleted');
     } catch (error) {
       console.error('Failed to delete section', error);
-      setErrorMsg('Failed to delete section');
+      toast.error('Failed to delete section');
       setIsDeleteModalOpen(false);
     }
   };
@@ -69,9 +70,10 @@ export default function SectionManager({ section, reportId, dragHandleProps }: P
     try {
       const updatedSections = await reportService.duplicateSection(reportId, section._id);
       useReportStore.getState().setSections(updatedSections);
+      toast.success('Section duplicated');
     } catch (error) {
       console.error('Failed to duplicate section', error);
-      setErrorMsg('Failed to duplicate section');
+      toast.error('Failed to duplicate section');
     }
   };
 
@@ -85,9 +87,10 @@ export default function SectionManager({ section, reportId, dragHandleProps }: P
       });
       addTable(section._id, newTable);
       setIsTableModalOpen(false);
+      toast.success('Table created');
     } catch (error) {
       console.error('Failed to create table', error);
-      setErrorMsg('Failed to create table');
+      toast.error('Failed to create table');
     }
   };
 
@@ -101,9 +104,10 @@ export default function SectionManager({ section, reportId, dragHandleProps }: P
       });
       updateSection(section._id, updatedSection);
       setIsEditModalOpen(false);
+      toast.success('Section updated');
     } catch (error) {
       console.error('Failed to update section', error);
-      setErrorMsg('Failed to update section');
+      toast.error('Failed to update section');
     }
   };
 
@@ -114,9 +118,10 @@ export default function SectionManager({ section, reportId, dragHandleProps }: P
         image
       });
       updateSection(section._id, updatedSection);
+      toast.success('Design saved');
     } catch (error) {
        console.error('Failed to save custom content', error);
-       setErrorMsg('Failed to save design');
+       toast.error('Failed to save design');
     }
   };
 
@@ -354,25 +359,6 @@ export default function SectionManager({ section, reportId, dragHandleProps }: P
               className="px-4 py-2 text-sm bg-accent text-white rounded-md hover:bg-blue-600 transition-colors"
             >
               Add Table
-            </button>
-          </div>
-        </div>
-      </Modal>
-
-      {/* Error Modal */}
-      <Modal 
-        isOpen={!!errorMsg} 
-        onClose={() => setErrorMsg('')}
-        title="Notice"
-      >
-        <div className="space-y-4">
-          <p className="text-text-primary">{errorMsg}</p>
-          <div className="flex justify-end mt-6">
-            <button 
-              onClick={() => setErrorMsg('')}
-              className="px-4 py-2 text-sm bg-accent text-white rounded-md hover:bg-blue-600 transition-colors"
-            >
-              OK
             </button>
           </div>
         </div>

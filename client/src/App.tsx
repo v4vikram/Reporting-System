@@ -1,6 +1,7 @@
 import React from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { Toaster } from 'react-hot-toast';
 import LoginPage from './features/auth/pages/LoginPage.tsx';
 import ForgotPasswordPage from './features/auth/pages/ForgotPasswordPage.tsx';
 import ResetPasswordPage from './features/auth/pages/ResetPasswordPage.tsx';
@@ -32,6 +33,14 @@ const ProtectedRoute = ({ children, roles }: { children: React.ReactNode, roles?
 export default function App() {
   return (
     <QueryClientProvider client={queryClient}>
+      <Toaster position="top-right" toastOptions={{
+        className: 'bg-surface border border-border text-text-primary',
+        style: {
+          background: 'var(--color-bg)',
+          color: 'var(--color-text-primary)',
+          border: '1px solid var(--color-border)',
+        },
+      }} />
       <Router>
         <Routes>
           <Route path="/login" element={<LoginPage />} />

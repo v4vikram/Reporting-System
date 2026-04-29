@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import toast from 'react-hot-toast';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -38,7 +39,6 @@ export default function ReportEditor() {
   const [activeTab, setActiveTab] = useState<'content' | 'coverPage'>('content');
   const [newSectionName, setNewSectionName] = useState('');
   const [newSectionTitle, setNewSectionTitle] = useState('');
-  const [errorMsg, setErrorMsg] = useState('');
 
   // Fetch clients and employees for dropdowns
   const { data: clients } = useClients();
@@ -96,13 +96,15 @@ export default function ReportEditor() {
     try {
       if (isNew) {
         const result = await createMutation.mutateAsync(data);
+        toast.success("Report created");
         navigate(`/reports/${result._id}`, { replace: true });
       } else {
         await updateMutation.mutateAsync({ id: id!, data });
+        toast.success("Report saved");
       }
     } catch (error) {
        console.error("Failed to save report.", error);
-       setErrorMsg("Failed to save report.");
+       toast.error("Failed to save report.");
     } finally {
       setIsSaving(false);
     }
@@ -110,7 +112,7 @@ export default function ReportEditor() {
 
   const handleAddSectionClick = () => {
     if (isNew) {
-      setErrorMsg('Please save the report first before adding sections.');
+      toast.error('Please save the report first before adding sections.');
       return;
     }
     setNewSectionName('');
@@ -133,9 +135,10 @@ export default function ReportEditor() {
       });
       addSection({ ...newSection, tables: [] });
       setIsSectionModalOpen(false);
+      toast.success('Section created');
     } catch (error) {
       console.error('Failed to create section', error);
-      setErrorMsg('Failed to create section');
+      toast.error('Failed to create section');
     }
   };
 
@@ -169,9 +172,10 @@ export default function ReportEditor() {
       updateReportField('coverPages', updatedReport.coverPages);
       // Also update locally to reflect the clear
       updateReportField('coverPage' as any, null);
+      toast.success('Cover page saved');
     } catch (error) {
       console.error('Failed to save cover page', error);
-      setErrorMsg('Failed to save cover page');
+      toast.error('Failed to save cover page');
       throw error; 
     }
   };
@@ -193,8 +197,9 @@ export default function ReportEditor() {
       }});
       updateReportField('coverPages', updatedReport.coverPages);
       updateReportField('coverPage' as any, null);
+      toast.success('Cover page added');
     } catch (error) {
-      setErrorMsg('Failed to add cover page');
+      toast.error('Failed to add cover page');
     }
   };
 
@@ -217,23 +222,25 @@ export default function ReportEditor() {
       }});
       updateReportField('coverPages', updatedReport.coverPages);
       updateReportField('coverPage' as any, null);
+      toast.success('Cover page duplicated');
     } catch (error) {
-      setErrorMsg('Failed to copy cover page');
+      toast.error('Failed to copy cover page');
     }
   };
 
   const handleRemoveCoverPage = async (index: number) => {
     if (!activeReport || !activeReport.coverPages) return;
     if (activeReport.coverPages.length <= 1) {
-      setErrorMsg('Cannot remove the last cover page.');
+      toast.error('Cannot remove the last cover page.');
       return;
     }
     const newPages = activeReport.coverPages.filter((_, i) => i !== index);
     try {
       const updatedReport = await updateMutation.mutateAsync({ id: activeReport._id, data: { coverPages: newPages } });
       updateReportField('coverPages', updatedReport.coverPages);
+      toast.success('Cover page removed');
     } catch (error) {
-      setErrorMsg('Failed to remove cover page');
+      toast.error('Failed to remove cover page');
     }
   };
 
@@ -490,25 +497,6 @@ export default function ReportEditor() {
               className="px-4 py-2 text-sm bg-accent text-white rounded-md hover:bg-blue-600 transition-colors disabled:opacity-50"
             >
               Add Section
-            </button>
-          </div>
-        </div>
-      </Modal>
-
-      {/* Error Modal */}
-      <Modal 
-        isOpen={!!errorMsg} 
-        onClose={() => setErrorMsg('')}
-        title="Notice"
-      >
-        <div className="space-y-4">
-          <p className="text-text-primary">{errorMsg}</p>
-          <div className="flex justify-end mt-6">
-            <button 
-              onClick={() => setErrorMsg('')}
-              className="px-4 py-2 text-sm bg-accent text-white rounded-md hover:bg-blue-600 transition-colors"
-            >
-              OK
             </button>
           </div>
         </div>

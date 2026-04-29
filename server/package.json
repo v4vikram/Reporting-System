@@ -4,8 +4,8 @@
   "version": "0.0.0",
   "scripts": {
     "build": "tsc",
-    "start": "node dist/index.js",
-    "dev": "tsx index.ts",
+    "start": "node dist/src/app.js",
+    "dev": "tsx src/app.ts",
     "seed": "tsx seed.ts",
     "lint": "tsc --noEmit",
     "postinstall": "npx puppeteer browsers install chrome"
