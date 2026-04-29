@@ -8,7 +8,7 @@
     "dev": "tsx src/app.ts",
     "seed": "tsx seed.ts",
     "lint": "tsc --noEmit",
-    "postinstall": "npx puppeteer browsers install chrome"
+    "postinstall": "npx puppeteer browsers clear && npx puppeteer browsers install chrome"
   },
   "dependencies": {
     "@google/genai": "^1.50.1",

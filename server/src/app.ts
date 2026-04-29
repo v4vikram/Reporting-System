@@ -58,14 +58,6 @@ app.use(globalErrorHandler);
 
 // Initialize DB and Start Server
 const startServer = async () => {
-    logger.info('Ensuring Puppeteer Chrome is installed...');
-    try {
-      const { execSync } = require('child_process');
-      execSync('npx puppeteer browsers install chrome', { stdio: 'inherit' });
-    } catch (e: any) {
-      logger.error('Failed to install puppeteer browser: ' + e.message);
-    }
-    
     await connectDB();
 
     app.listen(config.port, '0.0.0.0', () => {
