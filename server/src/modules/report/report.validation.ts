@@ -2,31 +2,44 @@ import { z } from 'zod';
 
 export const createReportSchema = z.object({
   body: z.object({
-    projectId: z.string().min(1, 'Project ID is required'),
-    title: z.string().min(3, 'Title is required and must be at least 3 characters long'),
-    description: z.string().optional(),
-    periodStart: z.string().optional(),
-    periodEnd: z.string().optional(),
-    status: z.enum(['draft', 'published', 'archived']).optional(),
+    projectId: z.string().min(1, 'Project is required'),
+    clientId: z.string().min(1, 'Client is required'),
+    title: z.string().min(1, 'Title is required'),
+    month: z.string().min(1, 'Month is required'),
+    date: z.string().optional(),
+    time: z.string().optional(),
+    category: z.string().optional(),
+    status: z.enum(['draft', 'published']).optional(),
+    assignedTo: z.string().optional(),
   }),
 });
 
 export const updateReportSchema = z.object({
   body: z.object({
-    title: z.string().min(3, 'Title is required and must be at least 3 characters long').optional(),
-    description: z.string().optional(),
-    periodStart: z.string().optional(),
-    periodEnd: z.string().optional(),
-    status: z.enum(['draft', 'published', 'archived']).optional(),
+    projectId: z.string().optional(),
+    clientId: z.string().optional(),
+    title: z.string().min(1, 'Title is required').optional(),
+    month: z.string().optional(),
+    date: z.string().optional(),
+    time: z.string().optional(),
+    category: z.string().optional(),
+    status: z.enum(['draft', 'published']).optional(),
+    assignedTo: z.string().optional(),
+    coverPages: z.array(z.object({
+      content: z.string().optional(),
+      image: z.string().optional(),
+    })).optional(),
   }),
 });
 
 export const createSectionSchema = z.object({
   body: z.object({
-    title: z.string().min(1, 'Title is required'),
-    type: z.enum(['table', 'text', 'image']),
+    name: z.string().min(1, 'Section name is required'),
+    title: z.string().optional(),
+    type: z.enum(['standard', 'custom']).optional(),
     content: z.string().optional(),
     image: z.string().optional(),
+    order: z.number().optional(),
   }),
 });
 

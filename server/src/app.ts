@@ -15,57 +15,80 @@ import publicRoutes from './modules/public/public.routes';
 import { globalErrorHandler } from './middlewares/error.middleware';
 import logger from './utils/logger';
 
-
 const app = express();
 
-// Proxy configuration - trust X-Forwarded-For headers
+// ✅ TRUST PROXY (important for deployment like Render / Nginx)
 app.set('trust proxy', 1);
 
-// Middleware
-app.use(helmet());
-app.use(rateLimiter);
-app.use(express.json({ limit: '50mb' }));
-app.use(express.urlencoded({ limit: '50mb', extended: true }));
+// ✅ Security
+app.use(
+  helmet({
+    crossOriginResourcePolicy: { policy: "cross-origin" }
+  })
+);
 
-// Configure CORS for decoupled architecture
+// ✅ CORS (FIRST — before rate limiter)
 app.use(cors({
-  origin: config.clientUrl,
-  credentials: true
+origin: config.clientUrl || 'http://localhost:3000',
+credentials: true
 }));
 
-app.use(morgan('dev'));
-app.use(['/api/uploads', '/uploads'], express.static(path.join(__dirname, '../uploads')));
+// ✅ Handle preflight requests
+app.options('*', cors());
 
-// API Routes
+// ✅ Rate limiter (AFTER CORS)
+app.use((req, res, next) => {
+// Allow preflight to pass
+if (req.method === 'OPTIONS') return next();
+return rateLimiter(req, res, next);
+});
+
+// ✅ Body parsing
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ limit: '50mb', extended: true }));
+
+// ✅ Logger
+if (config.nodeEnv === 'development') {
+  app.use(morgan('dev'));
+}
+
+// ✅ Static files
+app.use('/api/uploads', express.static(path.join(__dirname, '../uploads')));
+
+// ✅ Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/projects', projectRoutes);
 app.use('/api/reports', reportRoutes);
 app.use('/api/upload', uploadRoutes);
 app.use('/api/public', publicRoutes);
 
+// ✅ Health check
 app.get('/api/health', (req: Request, res: Response) => {
-  const dbStatus = mongoose.connection.readyState === 1 ? 'connected' : 'disconnected';
-  res.json({ 
-    status: 'ok', 
-    message: 'Backend API is running',
-    database: dbStatus,
-    timestamp: new Date().toISOString()
-  });
+const dbStatus =
+mongoose.connection.readyState === 1 ? 'connected' : 'disconnected';
+
+res.json({
+status: 'ok',
+message: 'Backend API is running',
+database: dbStatus,
+timestamp: new Date().toISOString()
+});
 });
 
-// Global Error Handler
+// ✅ Global error handler (LAST)
 app.use(globalErrorHandler);
 
-// Initialize DB and Start Server
+// ✅ Start server
 const startServer = async () => {
-    await connectDB();
+await connectDB();
 
-    app.listen(config.port, '0.0.0.0', () => {
-      logger.info(`🚀 Backend API running on http://0.0.0.0:${config.port}`);
-    });
+app.listen(config.port, '0.0.0.0', () => {
+logger.info(`🚀 Backend API running on http://localhost:${config.port}`);
+});
 };
 
 console.log('--- SERVER STARTING UP ---');
+
 startServer().catch(err => {
-    console.error('FAILED TO START SERVER:', err);
+console.error('FAILED TO START SERVER:', err);
 });

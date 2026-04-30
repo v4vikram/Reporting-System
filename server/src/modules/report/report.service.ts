@@ -174,6 +174,7 @@ export const duplicateReport = async (reportId: string, userId: string | undefin
 
   // 1. Duplicate Report
   const newReport = await reportRepository.createReport({
+    projectId: originalReport.projectId,
     clientId: originalReport.clientId,
     title: `${originalReport.title} (Copy)`,
     month: originalReport.month,

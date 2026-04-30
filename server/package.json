@@ -5,7 +5,7 @@
   "scripts": {
     "build": "tsc",
     "start": "node dist/app.js",
-    "dev": "tsx src/app.ts",
+   "dev": "nodemon --watch src --ext ts --exec tsx src/app.ts",
     "seed": "tsx seed.ts",
     "lint": "tsc --noEmit",
     "postinstall": "rm -rf ../puppeteer-cache && npx puppeteer browsers install chrome"
@@ -40,6 +40,7 @@
     "@types/node": "^22.14.0",
     "@types/nodemailer": "^8.0.0",
     "@types/winston": "^2.4.4",
+    "nodemon": "^3.1.14",
     "tsx": "^4.21.0",
     "typescript": "~5.8.2"
   }

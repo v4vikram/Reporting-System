@@ -29,8 +29,9 @@ const getAbsoluteUrl = (url: string, isInternal = false) => {
 
 // Reports
 export const createReport = asyncHandler(async (req: Request, res: Response) => {
-    const { clientId, title, month, date, time, category, assignedTo } = req.body;
+    const { projectId, clientId, title, month, date, time, category, assignedTo } = req.body;
   const report = new Report({
+    projectId,
     clientId,
     title,
     month,
@@ -56,6 +57,7 @@ export const getReports = asyncHandler(async (req: Request, res: Response) => {
   const query = userRole === 'client' ? { clientId: userId } : {};
   
   const reports = await Report.find(query)
+    .populate('projectId', 'title status')
     .populate('clientId', 'name email role')
     .populate('assignedTo', 'name email role')
     .sort({ updatedAt: -1 })
@@ -101,6 +103,7 @@ export const getLatestCoverage = asyncHandler(async (req: Request, res: Response
 
 export const getReportById = asyncHandler(async (req: Request, res: Response) => {
     const report = await Report.findById(req.params.id)
+    .populate('projectId', 'title status')
     .populate('clientId', 'name email role')
     .populate('assignedTo', 'name email role');
   if (!report) throw new AppError('Report not found', 404);
@@ -119,7 +122,7 @@ export const getReportById = asyncHandler(async (req: Request, res: Response) =>
 });
 
 export const updateReport = asyncHandler(async (req: Request, res: Response) => {
-    const { title, month, date, time, category, status, assignedTo, clientId, coverPages } = req.body;
+    const { title, month, date, time, category, status, assignedTo, clientId, projectId, coverPages } = req.body;
   
   // Convert empty string to null for optional ObjectId field
   const updateData: any = { 
@@ -129,7 +132,8 @@ export const updateReport = asyncHandler(async (req: Request, res: Response) => 
     time,
     category,
     status, 
-    clientId 
+    clientId,
+    projectId
   };
   
   if (coverPages) {
@@ -146,7 +150,10 @@ export const updateReport = asyncHandler(async (req: Request, res: Response) => 
     req.params.id, 
     updateData, 
     { new: true }
-  ).populate('clientId', 'name email role').populate('assignedTo', 'name email role');
+  )
+    .populate('projectId', 'title status')
+    .populate('clientId', 'name email role')
+    .populate('assignedTo', 'name email role');
   res.json(report);
 });
 
@@ -249,7 +256,8 @@ export const uploadScreenshots = asyncHandler(async (req: Request, res: Response
     throw new AppError('No files uploaded', 400);
   }
 
-  const uploadDir = path.join(__dirname, '..', 'uploads', 'screenshots');
+  const uploadDir = path.join(process.cwd(), 'uploads', 'screenshots');
+  console.log('Upload directory:', uploadDir);
   if (!fs.existsSync(uploadDir)) {
     fs.mkdirSync(uploadDir, { recursive: true });
   }
@@ -286,7 +294,7 @@ export const uploadRowImage = asyncHandler(async (req: Request, res: Response) =
     throw new AppError('No file uploaded', 400);
   }
 
-  const uploadDir = path.join(__dirname, '..', 'uploads', 'rows');
+  const uploadDir = path.join(process.cwd(), 'uploads', 'rows');
   if (!fs.existsSync(uploadDir)) {
     fs.mkdirSync(uploadDir, { recursive: true });
   }
@@ -331,7 +339,7 @@ export const generatePDF = asyncHandler(async (req: Request, res: Response) => {
   let headerImageUrl = 'https://via.placeholder.com/800x100.png?text=Header+Image+Placeholder';
   
   for (const ext of headerExtensions) {
-    const p = path.join(__dirname, '..', 'uploads', `header.${ext}`);
+    const p = path.join(process.cwd(), 'uploads', `header.${ext}`);
     if (fs.existsSync(p)) {
                 const imageData = fs.readFileSync(p);
         const base64 = imageData.toString('base64');
@@ -344,7 +352,7 @@ export const generatePDF = asyncHandler(async (req: Request, res: Response) => {
   // Check for custom footer image in uploads folder
   let footerImageUrl = '';
   for (const ext of headerExtensions) {
-    const p = path.join(__dirname, '..', 'uploads', `footer.${ext}`);
+    const p = path.join(process.cwd(), 'uploads', `footer.${ext}`);
     if (fs.existsSync(p)) {
                 const imageData = fs.readFileSync(p);
         const base64 = imageData.toString('base64');
@@ -357,7 +365,7 @@ export const generatePDF = asyncHandler(async (req: Request, res: Response) => {
   // Check for tiranga background image
   let tirangaBgUrl = '';
   for (const ext of headerExtensions) {
-    const p = path.join(__dirname, '..', 'uploads', `tiranga.${ext}`);
+    const p = path.join(process.cwd(), 'uploads', `tiranga.${ext}`);
     if (fs.existsSync(p)) {
                 const imageData = fs.readFileSync(p);
         const base64 = imageData.toString('base64');

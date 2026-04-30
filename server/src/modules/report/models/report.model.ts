@@ -8,6 +8,7 @@ export interface ICustomPage {
 }
 
 export interface IReport extends Document {
+  projectId?: mongoose.Types.ObjectId;
   clientId: mongoose.Types.ObjectId;
   title: string;
   month: string;
@@ -26,6 +27,7 @@ export interface IReport extends Document {
 }
 
 const reportSchema = new Schema({
+  projectId: { type: Schema.Types.ObjectId, ref: 'Project' },
   clientId: { type: Schema.Types.ObjectId, ref: 'User', required: true },
   title: { type: String, required: true },
   month: { type: String, required: true },
@@ -42,6 +44,7 @@ const reportSchema = new Schema({
 }, { timestamps: true });
 
 reportSchema.index({ clientId: 1 });
+reportSchema.index({ projectId: 1 });
 reportSchema.index({ status: 1 });
 reportSchema.index({ createdBy: 1 });
 
