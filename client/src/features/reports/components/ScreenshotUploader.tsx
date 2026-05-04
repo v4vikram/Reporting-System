@@ -123,11 +123,14 @@ export default function ScreenshotUploader({ table, sectionId }: Props) {
                         >
                           <X className="w-4 h-4" />
                         </button>
+                        {
+                          console.log("screenshot.url0", getImageUrl(screenshot.url))
+                        }
                         <img 
                           src={getImageUrl(screenshot.url)} 
                           alt={screenshot.caption || 'Screenshot'} 
                           referrerPolicy="no-referrer"
-                          className="w-full h-full object-cover"
+                          className="w-[500px] h-[500px] object-cover"
                         />
                       </div>
                     )}

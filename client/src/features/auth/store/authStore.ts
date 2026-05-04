@@ -1,12 +1,12 @@
 import { create } from 'zustand';
 import { User } from '../../../types/index.ts';
 
-interface AuthState {
-  user: User | null;
-  token: string | null;
-  login: (user: User, token: string) => void;
-  logout: () => void;
-}
+  interface AuthState {
+    user: User | null;
+    token: string | null;
+    login: (user: User, token: string) => void;
+    logout: () => void;
+  }
 
 export const useAuthStore = create<AuthState>((set) => ({
   user: (() => {

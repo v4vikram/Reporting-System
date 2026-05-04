@@ -36,6 +36,7 @@ export const reportService = {
     return data;
   },
   createSection: async (reportId: string, sectionData: Partial<Section>) => {
+    // console.log(reportId, sectionData, 'reportId, sectionData');
     const { data } = await api.post<Section>(`/reports/${reportId}/sections`, sectionData);
     return data;
   },
@@ -52,6 +53,7 @@ export const reportService = {
     return data;
   },
   createTable: async (sectionId: string, tableData: Partial<CoverageTable>) => {
+    console.log(sectionId, tableData, 'sectionId, tableData');
     const { data } = await api.post<CoverageTable>(`/reports/sections/${sectionId}/tables`, tableData);
     return data;
   },

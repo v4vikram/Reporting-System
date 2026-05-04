@@ -1,113 +1,241 @@
-import { Outlet, Link, useNavigate } from 'react-router-dom';
+import { Outlet, Link, useNavigate, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
-import { 
-  LayoutDashboard, 
-  Briefcase, 
-  Users, 
-  LogOut, 
-  Menu, 
+import {
+  LogOut,
+  Menu,
   X,
   ChevronRight,
-  FileText,
-  Newspaper
 } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuthStore } from '../features/auth/store/authStore.ts';
+import { MENU_ITEMS } from '../lib/menuConfig.ts';
 
+/* ─── Avatar initials ────────────────────────────────────── */
+function UserAvatar({ name, size = 'md' }: { name: string; size?: 'sm' | 'md' }) {
+  const initials = name
+    .split(' ')
+    .map(w => w[0])
+    .join('')
+    .toUpperCase()
+    .slice(0, 2);
+  const dim = size === 'sm' ? 'w-8 h-8 text-xs' : 'w-9 h-9 text-sm';
+  return (
+    <div className={`${dim} rounded-xl bg-accent/15 text-accent font-bold flex items-center justify-center shrink-0 select-none`}>
+      {initials}
+    </div>
+  );
+}
+
+/* ─── Role label ─────────────────────────────────────────── */
+function roleLabel(role: string) {
+  return role.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+}
+
+/* ═══════════════════════════════════════════════════════════ */
 export default function Layout() {
-  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
-  const { user, logout } = useAuthStore();
+  const location = useLocation();
   const navigate = useNavigate();
+  const { user, logout } = useAuthStore();
 
-  const handleLogout = () => {
-    logout();
-    navigate('/login');
-  };
+  /* Desktop: persistent. Mobile: overlay drawer */
+  const [desktopOpen, setDesktopOpen] = useState(true);
+  const [mobileOpen, setMobileOpen]   = useState(false);
 
-  const navItems = [
-    { icon: LayoutDashboard, label: 'Dashboard', path: '/' },
-    { icon: Newspaper, label: 'News Coverage', path: '/news' },
-    { icon: Briefcase, label: 'Projects', path: '/projects' },
-    { icon: FileText, label: 'Reports', path: '/reports' },
-    ...(user?.role === 'super_admin' ? [{ icon: Users, label: 'Users', path: '/users' }] : []),
-  ];
+  /* Close mobile drawer on route change */
+  useEffect(() => { setMobileOpen(false); }, [location.pathname]);
+
+  /* Close mobile drawer on ESC */
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => { if (e.key === 'Escape') setMobileOpen(false); };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, []);
+
+  const handleLogout = () => { logout(); navigate('/login'); };
+
+  const navItems = MENU_ITEMS.filter(item => user && item.roles.includes(user.role));
+
+  /* Active check */
+  const isActive = (path: string) =>
+    path === '/'
+      ? location.pathname === '/'
+      : location.pathname.startsWith(path);
+
+  /* ── Shared sidebar content ── */
+  const SidebarContent = ({ onClose }: { onClose?: () => void }) => (
+    <div className="flex flex-col h-full">
+      {/* Logo */}
+      <div className="flex items-center justify-between px-5 h-16 border-b border-border shrink-0">
+        <div className="flex items-center gap-2.5">
+          <div className="w-7 h-7 rounded-lg bg-accent flex items-center justify-center shrink-0">
+            <span className="text-white text-xs font-black">E</span>
+          </div>
+          <span className="font-bold text-base text-text-primary tracking-tight">Enterprise</span>
+        </div>
+        <button
+          onClick={onClose}
+          className="p-1.5 rounded-lg hover:bg-card text-text-secondary hover:text-text-primary transition-all duration-150"
+          aria-label="Close sidebar"
+        >
+          <X className="w-4 h-4" />
+        </button>
+      </div>
+
+      {/* Nav */}
+      <nav className="flex-1 px-3 py-4 space-y-0.5 overflow-y-auto">
+        {navItems.map((item) => {
+          const active = isActive(item.path);
+          return (
+            <Link
+              key={item.path}
+              to={item.path}
+              className={`relative flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium transition-all duration-150 group ${
+                active
+                  ? 'bg-accent text-white shadow-md shadow-accent/20'
+                  : 'text-text-secondary hover:text-text-primary hover:bg-card'
+              }`}
+            >
+              <item.icon className={`w-4 h-4 shrink-0 ${active ? 'text-white' : 'text-text-secondary group-hover:text-text-primary'}`} />
+              <span className="truncate">{item.label}</span>
+              {active && (
+                <motion.div
+                  layoutId="nav-pill"
+                  className="absolute inset-0 rounded-xl bg-accent -z-10"
+                  transition={{ type: 'spring', stiffness: 500, damping: 40 }}
+                />
+              )}
+            </Link>
+          );
+        })}
+      </nav>
+
+      {/* User + Logout */}
+      <div className="px-3 py-4 border-t border-border space-y-1 shrink-0">
+        {/* User card */}
+        <div className="flex items-center gap-3 px-3 py-2.5 rounded-xl bg-card/60">
+          <UserAvatar name={user?.name ?? 'U'} size="sm" />
+          <div className="min-w-0 flex-1">
+            <p className="text-sm font-semibold text-text-primary truncate leading-tight">{user?.name}</p>
+            <p className="text-[11px] text-text-secondary/60 truncate mt-0.5">{roleLabel(user?.role ?? '')}</p>
+          </div>
+        </div>
+
+        <button
+          onClick={handleLogout}
+          className="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium text-text-secondary hover:text-red-500 hover:bg-red-500/8 transition-all duration-150 group"
+        >
+          <LogOut className="w-4 h-4 shrink-0 group-hover:text-red-500 transition-colors" />
+          <span>Log out</span>
+        </button>
+      </div>
+    </div>
+  );
+
+  /* ── Current page label for breadcrumb ── */
+  const currentPage = navItems.find(i => isActive(i.path))?.label ?? 'Dashboard';
 
   return (
     <div className="flex h-screen bg-bg text-text-primary overflow-hidden">
-      <AnimatePresence mode="wait">
-        {isSidebarOpen && (
-          <motion.aside 
+
+      {/* ════════ DESKTOP SIDEBAR ════════ */}
+      <AnimatePresence initial={false}>
+        {desktopOpen && (
+          <motion.aside
+            key="desktop-sidebar"
             initial={{ width: 0, opacity: 0 }}
-            animate={{ width: 250, opacity: 1 }}
+            animate={{ width: 240, opacity: 1 }}
             exit={{ width: 0, opacity: 0 }}
-            className="bg-sidebar border-r border-border flex flex-col shadow-xl z-20 whitespace-nowrap"
+            transition={{ duration: 0.22, ease: [0.4, 0, 0.2, 1] }}
+            className="hidden md:flex flex-col bg-sidebar border-r border-border z-20 overflow-hidden shrink-0"
+            style={{ minWidth: 0 }}
           >
-            <div className="p-5 flex items-center justify-between border-b border-border h-16">
-              <span className="font-bold text-xl text-accent">Enterprise</span>
-              <button 
-                onClick={() => setIsSidebarOpen(false)} 
-                className="p-2 hover:bg-card rounded-lg text-text-secondary transition-colors"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-
-            <nav className="flex-1 px-3 py-6 space-y-1 overflow-y-auto">
-              {navItems.map((item) => (
-                <Link
-                  key={item.path}
-                  to={item.path}
-                  className="flex items-center gap-4 p-3.5 hover:bg-card rounded-lg text-text-secondary hover:text-text-primary transition-all group"
-                >
-                  <item.icon className="w-5 h-5 shrink-0" />
-                  <span className="font-medium text-sm">{item.label}</span>
-                </Link>
-              ))}
-            </nav>
-
-            <div className="p-4 border-t border-border">
-              <button 
-                onClick={handleLogout}
-                className="w-full flex items-center gap-4 p-3.5 hover:bg-red-500/10 rounded-lg text-text-secondary hover:text-red-500 transition-all active:scale-95 group"
-              >
-                <LogOut className="w-5 h-5 shrink-0 group-hover:block" />
-                <span className="font-medium text-sm">Logout</span>
-              </button>
+            <div className="w-[240px] h-full">
+              <SidebarContent onClose={() => setDesktopOpen(false)} />
             </div>
           </motion.aside>
         )}
       </AnimatePresence>
 
-      <main className="flex-1 flex flex-col h-screen overflow-hidden relative">
-        <header className="h-16 bg-bg border-b border-border flex items-center justify-between px-8 z-10 shrink-0">
-          <div className="flex items-center gap-4">
-            {!isSidebarOpen && (
-              <button 
-                onClick={() => setIsSidebarOpen(true)}
-                className="p-2 hover:bg-card rounded-lg flex items-center justify-center text-text-primary active:scale-95"
+      {/* ════════ MOBILE SIDEBAR OVERLAY ════════ */}
+      <AnimatePresence>
+        {mobileOpen && (
+          <>
+            {/* Backdrop */}
+            <motion.div
+              key="backdrop"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.2 }}
+              className="fixed inset-0 z-40 bg-black/50 backdrop-blur-sm md:hidden"
+              onClick={() => setMobileOpen(false)}
+            />
+            {/* Drawer */}
+            <motion.aside
+              key="mobile-sidebar"
+              initial={{ x: -280 }}
+              animate={{ x: 0 }}
+              exit={{ x: -280 }}
+              transition={{ duration: 0.25, ease: [0.4, 0, 0.2, 1] }}
+              className="fixed inset-y-0 left-0 z-50 w-[280px] bg-sidebar border-r border-border shadow-2xl md:hidden"
+            >
+              <SidebarContent onClose={() => setMobileOpen(false)} />
+            </motion.aside>
+          </>
+        )}
+      </AnimatePresence>
+
+      {/* ════════ MAIN ════════ */}
+      <main className="flex-1 flex flex-col h-screen overflow-hidden min-w-0">
+
+        {/* ── Header ── */}
+        <header className="h-16 bg-bg border-b border-border flex items-center justify-between px-4 sm:px-5 z-10 shrink-0 gap-3">
+
+          {/* Left: hamburger + breadcrumb */}
+          <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+            {/* Mobile hamburger */}
+            <button
+              onClick={() => setMobileOpen(true)}
+              className="md:hidden p-2 rounded-xl border border-border hover:bg-card hover:border-accent/30 text-text-secondary hover:text-text-primary transition-all duration-150 shrink-0"
+              aria-label="Open menu"
+            >
+              <Menu className="w-4 h-4" />
+            </button>
+
+            {/* Desktop: toggle when sidebar closed */}
+            {!desktopOpen && (
+              <button
+                onClick={() => setDesktopOpen(true)}
+                className="hidden md:flex p-2 rounded-xl border border-border hover:bg-card hover:border-accent/30 text-text-secondary hover:text-text-primary transition-all duration-150 shrink-0"
+                aria-label="Open sidebar"
               >
-                <Menu className="w-5 h-5" />
+                <Menu className="w-4 h-4" />
               </button>
             )}
-            <div className="flex items-center gap-2 text-sm text-text-secondary">
-              <span>Home</span>
-              <ChevronRight className="w-4 h-4" />
-              <span className="text-text-primary font-medium">Dashboard</span>
-            </div>
+
+            {/* Breadcrumb */}
+            <nav className="flex items-center gap-1.5 text-sm min-w-0">
+              <span className="hidden sm:inline text-text-secondary/50 text-xs">Home</span>
+              <ChevronRight className="hidden sm:inline w-3 h-3 text-text-secondary/30 shrink-0" />
+              <span className="font-semibold text-text-primary truncate text-sm">{currentPage}</span>
+            </nav>
           </div>
-          <div className="flex items-center gap-4">
-            <div className="text-right">
-              <p className="text-sm font-semibold text-text-primary">{user?.name}</p>
-              <p className="text-xs text-text-secondary capitalize">{user?.role.replace('_', ' ')}</p>
+
+          {/* Right: user info */}
+          <div className="flex items-center gap-2.5 shrink-0">
+            <div className="hidden sm:block text-right">
+              <p className="text-sm font-semibold text-text-primary leading-tight truncate max-w-[140px]">{user?.name}</p>
+              <p className="text-[11px] text-text-secondary/60 truncate">{roleLabel(user?.role ?? '')}</p>
             </div>
-            <div className="w-10 h-10 bg-card border border-border rounded-full flex items-center justify-center text-accent font-bold shadow-sm">
-              {user?.name[0]}
-            </div>
+            <UserAvatar name={user?.name ?? 'U'} />
           </div>
         </header>
 
-        <div className="flex-1 overflow-y-auto p-8 bg-bg relative">
-          <Outlet />
+        {/* ── Page content ── */}
+        <div className="flex-1 overflow-y-auto bg-bg">
+          <div className="p-4 sm:p-6 lg:p-8">
+            <Outlet />
+          </div>
         </div>
       </main>
     </div>

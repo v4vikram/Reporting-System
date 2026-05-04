@@ -1,6 +1,7 @@
-import { BaseEntity, User } from '../../../types';
+import { BaseEntity, Project, User } from '../../../types';
 
 export interface Report extends BaseEntity {
+  projectId?: Project | string;
   clientId: User | string;
   title: string;
   month: string;

@@ -12,9 +12,7 @@ interface ProjectFormProps {
 export default function ProjectForm({ project, onClose }: ProjectFormProps) {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
-  const [category, setCategory] = useState('');
-  const [time, setTime] = useState('');
-  const [status, setStatus] = useState<'active' | 'completed' | 'on_hold'>('active');
+  const [status, setStatus] = useState<'pending' | 'active' | 'completed'>('pending');
   const createMutation = useCreateProject();
   const updateMutation = useUpdateProject();
 
@@ -24,20 +22,19 @@ export default function ProjectForm({ project, onClose }: ProjectFormProps) {
     if (project) {
       setTitle(project.title);
       setDescription(project.description);
-      setCategory(project.category || '');
-      setTime(project.time || '');
-      setStatus(project.status);
+      // Normalize old `on_hold` records to `pending` for compatibility.
+      setStatus(project.status === 'on_hold' ? 'pending' : (project.status as 'pending' | 'active' | 'completed'));
     }
   }, [project]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (project) {
-      updateMutation.mutate({ id: project._id, data: { title, description, category, time, status } }, {
+      updateMutation.mutate({ id: project._id, data: { title, description, status } }, {
         onSuccess: () => onClose()
       });
     } else {
-      createMutation.mutate({ title, description, category, time, status }, {
+      createMutation.mutate({ title, description, status }, {
         onSuccess: () => onClose()
       });
     }
@@ -65,38 +62,16 @@ export default function ProjectForm({ project, onClose }: ProjectFormProps) {
             className="w-full bg-bg border border-border rounded-lg px-4 py-2 text-text-primary focus:ring-1 focus:ring-accent outline-none min-h-[100px]"
           />
         </div>
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <label className="block text-sm font-medium text-text-secondary mb-1">Category</label>
-            <input
-              type="text"
-              required
-              value={category}
-              onChange={(e) => setCategory(e.target.value)}
-              className="w-full bg-bg border border-border rounded-lg px-4 py-2 text-text-primary focus:ring-1 focus:ring-accent outline-none"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-text-secondary mb-1">Time</label>
-            <input
-              type="time"
-              required
-              value={time}
-              onChange={(e) => setTime(e.target.value)}
-              className="w-full bg-bg border border-border rounded-lg px-4 py-2 text-text-primary focus:ring-1 focus:ring-accent outline-none"
-            />
-          </div>
-        </div>
         <div>
           <label className="block text-sm font-medium text-text-secondary mb-1">Status</label>
           <select
             value={status}
-            onChange={(e) => setStatus(e.target.value as 'active' | 'completed' | 'on_hold')}
+            onChange={(e) => setStatus(e.target.value as 'pending' | 'active' | 'completed')}
             className="w-full bg-bg border border-border rounded-lg px-4 py-2 text-text-primary focus:ring-1 focus:ring-accent outline-none"
           >
+            <option value="pending">Pending</option>
             <option value="active">Active</option>
             <option value="completed">Completed</option>
-            <option value="on_hold">On Hold</option>
           </select>
         </div>
         <div className="flex justify-end gap-3 mt-6">

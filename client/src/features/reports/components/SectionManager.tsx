@@ -80,7 +80,7 @@ export default function SectionManager({ section, reportId, dragHandleProps }: P
   const handleAddTable = async () => {
     try {
       const newTable = await reportService.createTable(section._id, {
-        title: newTableTitle || undefined,
+        title: newTableTitle || "New Table",
         order: section.tables?.length || 0,
         rows: [],
         screenshots: []

@@ -16,9 +16,7 @@ export interface User extends BaseEntity {
 export interface Project extends BaseEntity {
   title: string;
   description: string;
-  category: string; // New Field
-  time: string; // New Field
-  status: 'active' | 'completed' | 'on_hold';
+  status: 'pending' | 'active' | 'completed' | 'on_hold';
   createdBy?: {
     _id?: string;
     name: string;
